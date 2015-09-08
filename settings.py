@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
+import getpass
 
 os_env = os.environ
+name = getpass.getuser()
 
 
 class Config(object):
@@ -14,20 +16,20 @@ class ProdConfig(Config):
     """Production configuration."""
     ENV = 'prod'
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/example'  # TODO: Change once on heroku
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'DATABASE_URL',
+        'postgresql+psycopg2://{}@localhost/chess_api_prod'.format(name)
+    )
 
 
 class DevConfig(Config):
     """Development configuration."""
     ENV = 'dev'
     DEBUG = True
-    DB_NAME = 'dev.db'
-    # Put the db file in project root
-    DB_PATH = os.path.join(Config.PROJECT_ROOT, DB_NAME)
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(DB_PATH)
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}@localhost/chess_api_dev'.format(name)
 
 
 class TestConfig(Config):
     TESTING = True
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite://'
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}@localhost/chess_api_test'.format(name)

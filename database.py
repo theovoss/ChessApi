@@ -76,4 +76,5 @@ class ChessGame(Model, db.Model):
 
     password1 = db.Column(db.String())
     password2 = db.Column(db.String())
+    board = db.Column(JSONB)
     move_history = db.Column(JSONB)

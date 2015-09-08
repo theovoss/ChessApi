@@ -6,13 +6,13 @@ from flask_migrate import MigrateCommand
 
 from database import db
 
-from api import app
+from api import create_app
+from settings import ProdConfig, DevConfig
 
-db.init_app(app)
-# if os.environ.get("chess_api_ENV") == 'prod':
-#     app = create_app(ProdConfig)
-# else:
-#     app = create_app(DevConfig)
+if os.environ.get("chess_api_ENV") == 'prod':
+    app = create_app(ProdConfig)
+else:
+    app = create_app(DevConfig)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TEST_PATH = os.path.join(HERE, 'tests')
