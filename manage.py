@@ -4,10 +4,10 @@ import os
 from flask_script import Manager, Shell, Server
 from flask_migrate import MigrateCommand
 
-from database import db
+from api.database import db
 
-from api import create_app
-from settings import ProdConfig, DevConfig
+from api.app import create_app
+from api.settings import ProdConfig, DevConfig
 
 if os.environ.get("chess_api_ENV") == 'prod':
     app = create_app(ProdConfig)
@@ -27,14 +27,13 @@ def _make_context():
     return {'app': app, 'db': db}
 
 
-@manager.command
 def test():
     """Run the tests."""
     import pytest
     exit_code = pytest.main([TEST_PATH, '--verbose'])
     return exit_code
 
-
+manager.add_command('test', test())
 manager.add_command('server', Server())
 manager.add_command('shell', Shell(make_context=_make_context))
 manager.add_command('db', MigrateCommand)

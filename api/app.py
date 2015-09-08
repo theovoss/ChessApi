@@ -2,9 +2,9 @@
 from flask import Flask
 from sqlalchemy_utils import database_exists, create_database
 
-from routes import blueprint as routes_blueprint
-from database import db, migrate
-from settings import ProdConfig
+from .routes import blueprint as routes_blueprint
+from .database import db, migrate
+from .settings import ProdConfig
 
 
 def create_app(config_object=ProdConfig, _db=db):
@@ -12,7 +12,6 @@ def create_app(config_object=ProdConfig, _db=db):
     app.config.from_object(config_object)
     register_extensions(app, _db)
     register_blueprints(app)
-    print(app.url_map)
     return app
 
 
