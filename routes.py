@@ -1,57 +1,77 @@
 from flask import Blueprint, jsonify, abort, url_for
+
+from webargs import Arg
+from webargs.flaskparser import FlaskParser
+
 from chess.chess import ChessBoard as ChessBoardLibrary
 from database import ChessGame as dbChessGame
 
 blueprint = Blueprint("chess", __name__, url_prefix='/chess/')
+parser = FlaskParser(('query', 'json'))
+
+move_args = {
+    'start': Arg(str, required=True),
+    'end': Arg(str, required=True),
+    'password': Arg(str, required=True),
+}
+
+password_args = {
+    'password': Arg(str, required=True)
+}
 
 
 @blueprint.route('<game_token>/', methods=['GET'])
-def board():
+def board(game_token):
     # current state of the chess board.
     pass
 
 
-@blueprint.route('<game_token>/<start>/<end>/', methods=['POST'])
-def move():
+@parser.use_kwargs(move_args)
+@blueprint.route('<game_token>/', methods=['POST'])
+def move(game_token, start, end, password):
     # aborts if an invalid move. otherwise returns new board state after the move.
     pass
 
 
 @blueprint.route('<game_token>/', methods=['GET'])
-def players():
+def players(game_token):
     # returns the current players for a game.
     pass
 
 
-@blueprint.route('create/<your_password>/', methods=['POST'])
-def create_game(your_password):
+@blueprint.route('create/', methods=['POST'])
+@parser.use_kwargs(password_args)
+def create_game(password):
+    print("password is: " + str(password))
     game_json = ChessBoardLibrary().board
-    game = dbChessGame.create(password1=your_password, board=game_json)
+    game = dbChessGame.create(password1=password, board=game_json)
     token = game.id
     links = {}
-    links['invite'] = url_for('chess.join_game', game_token=game.id, your_password='put_your_password_here')
+    links['invite'] = url_for('chess.join_game', game_token=game.id)
     links['board'] = url_for('chess.board', game_token=game.id)
-    links['move'] = url_for('chess.move', game_token=game.id,
-                            start="start location: 'A2'", end="end location: 'B3'")
+    links['move'] = url_for('chess.move', game_token=game.id)
     data = dict(token=token, links=links)
+
     response = jsonify(data)
     response.status_code = 200
     return response
 
 
-@blueprint.route('join/<game_token>/<your_password>/', methods=['POST'])
-def join_game(game_token, your_password):
+@parser.use_kwargs(password_args)
+@blueprint.route('join/<game_token>/', methods=['POST'])
+def join_game(game_token, password):
     # takes a game token and returns one. aborts if two players are already part of the game.
     game = dbChessGame.query.get(game_token)
     if game:
         if game.password1 and game.password2:
             abort(400, "Two players have already joined this game.")
         else:
-            game.password2 = your_password
+            game.password2 = password
             game.save()
-            # move_link = url_for('move')
-            # board_link = url_for('board')
-            data = dict(token=game.id)  # , board=board_link, move=move_link)
+            links = {}
+            links['board'] = url_for('board', game_token=game.id)
+            links['move'] = url_for('move', game_token=game.id)
+            data = dict(token=game.id, links=links)
     else:
         abort(400, "That game doesn't exits.")
 

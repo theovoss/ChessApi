@@ -1,0 +1,26 @@
+# Temporary Python files
+*.pyc
+*.egg-info
+__pycache__
+.ipynb_checkpoints
+
+# Temporary DB files
+sqlalchemy.log
+
+# Temporary virtualenv files
+.cache
+env
+.env
+
+# Testing and coverage results
+/.coverage*
+tests/coverage
+/pyunit.xml
+/.pytest
+
+# Build and release directories
+build
+dist
+
+# Sublime Text
+*.sublime-workspace
