@@ -4,6 +4,8 @@ import os
 from flask_script import Manager, Shell, Server
 from flask_migrate import MigrateCommand
 
+from chess.chess import Chess
+
 from api.database import db
 
 from api.app import create_app
@@ -25,7 +27,7 @@ def _make_context():
     """Return context dict for a shell session so you can access
     app, db, and the User model by default.
     """
-    return {'app': app, 'db': db}
+    return {'app': app, 'db': db, 'chess': Chess()}
 
 
 @manager.command

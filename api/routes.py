@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, abort, url_for
 from webargs import Arg
 from webargs.flaskparser import FlaskParser
 
-from chess.chess import ChessBoard as ChessBoardLibrary
+from chess.chess import Chess
 from .database import ChessGame as dbChessGame
 
 blueprint = Blueprint("chess", __name__, url_prefix='/chess/')
@@ -25,7 +25,7 @@ def board(game_token):
     # current state of the chess board.
     db_game = dbChessGame.query.get(game_token)
     if db_game:
-        game = ChessBoardLibrary(existing_board=db_game.board)
+        game = Chess(existing_board=db_game.board)
         data = game.board.generate_fen()
         response = jsonify(data)
         response.status_code = 200
@@ -34,10 +34,18 @@ def board(game_token):
     return response
 
 
-@blueprint.route('<game_token>/', methods=['POST'])
+@blueprint.route('move/<game_token>/', methods=['POST'])
 @parser.use_kwargs(move_args)
 def move(game_token, start, end, password):
     # aborts if an invalid move. otherwise returns new board state after the move.
+    game = dbChessGame.query.get(game_token)
+
+    if game:
+        if game.password1 is None or game.password2 is None:
+            abort(400, "This game needs more players.")
+        # valid game, check if valid move
+        chess_game = Chess(game.board)
+        chess_game.move(start, end)
     pass
 
 
@@ -68,8 +76,6 @@ def create_game(password):
 @parser.use_kwargs(password_args)
 def join_game(game_token, password):
     # takes a game token and returns one. aborts if two players are already part of the game.
-    print(game_token)
-    print(password)
     game = dbChessGame.query.get(game_token)
 
     if game:

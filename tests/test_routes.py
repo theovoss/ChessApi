@@ -74,6 +74,31 @@ class TestJoinGame:
         assert response.status_code == 400
 
 
+class TestMakeAMove:
+
+    endpoint = "/chess/move/{}/"
+
+    def test_cant_make_a_move_if_the_game_doesnt_have_two_players(self, client, db):
+        game = ChessGameFactory(password1="bob")
+        token = game.id
+
+        params = dict(password="bob", start="A2", end="A3")
+        response = client.post(self.endpoint.format(token), data=json.dumps(params),
+                               content_type='application/json')
+
+        assert response.status_code == 400
+
+    def test_cant_make_a_move_if_the_move_is_invalid(self, client, db):
+        game = ChessGameFactory(password2="steve")
+        token = game.id
+
+        params = dict(password="bob", start="A1", end="A2")
+        response = client.post(self.endpoint.format(token), data=json.dumps(params),
+                               content_type='application/json')
+
+        assert response.status_code == 400
+
+
 class TestGetBoard:
 
     endpoint = "/chess/game/{}/"
