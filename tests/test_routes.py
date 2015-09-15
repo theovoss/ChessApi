@@ -1,5 +1,7 @@
 import json
 
+from .factories import ChessGameFactory
+
 
 def load_response(response, key=None):
     """Load data (dict, list, etc.) from a Flask response object."""
@@ -32,3 +34,49 @@ class TestCreateGame:
         assert data['token'] in data['links']['move']
         assert data['token'] in data['links']['board']
         assert data['token'] in data['links']['invite']
+
+
+class TestJoinGame:
+
+    endpoint = "/chess/join/{}/"
+
+    def test_can_join_a_game(self, client, db):
+        game = ChessGameFactory()
+        token = game.id
+
+        params = dict(password="playa 2")
+        response = client.post(self.endpoint.format(token), data=json.dumps(params),
+                               content_type='application/json')
+        data = load_response(response)
+
+        assert response.status_code == 200
+        assert data['token'] == game.id
+        assert game.id in data['links']['board']
+        assert game.id in data['links']['move']
+
+    def test_cant_join_game_if_already_full(self, client, db):
+        game = ChessGameFactory(password2="2nd player")
+        token = game.id
+
+        params = dict(password="playa 2")
+        response = client.post(self.endpoint.format(token), data=json.dumps(params),
+                               content_type='application/json')
+
+        assert response.status_code == 400
+
+    def test_cant_join_non_existent_game(self, client, db):
+        token = "This is not a game"
+
+        params = dict(password="playa 2")
+        response = client.post(self.endpoint.format(token), data=json.dumps(params),
+                               content_type='application/json')
+
+        assert response.status_code == 400
+
+
+class TestGetBoard:
+
+    endpoint = "/chess/game/{}/"
+
+    def test_can_get_starting_board_state(self, client, db):
+        pass

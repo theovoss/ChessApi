@@ -34,8 +34,8 @@ def board(game_token):
     return response
 
 
-@parser.use_kwargs(move_args)
 @blueprint.route('<game_token>/', methods=['POST'])
+@parser.use_kwargs(move_args)
 def move(game_token, start, end, password):
     # aborts if an invalid move. otherwise returns new board state after the move.
     pass
@@ -64,11 +64,14 @@ def create_game(password):
     return response
 
 
-@parser.use_kwargs(password_args)
 @blueprint.route('join/<game_token>/', methods=['POST'])
+@parser.use_kwargs(password_args)
 def join_game(game_token, password):
     # takes a game token and returns one. aborts if two players are already part of the game.
+    print(game_token)
+    print(password)
     game = dbChessGame.query.get(game_token)
+
     if game:
         if game.password1 and game.password2:
             abort(400, "Two players have already joined this game.")
@@ -76,8 +79,8 @@ def join_game(game_token, password):
             game.password2 = password
             game.save()
             links = {}
-            links['board'] = url_for('board', game_token=game.id)
-            links['move'] = url_for('move', game_token=game.id)
+            links['board'] = url_for('chess.board', game_token=game.id)
+            links['move'] = url_for('chess.move', game_token=game.id)
             data = dict(token=game.id, links=links)
     else:
         abort(400, "That game doesn't exits.")

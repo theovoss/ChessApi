@@ -32,4 +32,5 @@ class DevConfig(Config):
 class TestConfig(Config):
     TESTING = True
     DEBUG = True
+    PRESERVE_CONTEXT_ON_EXCEPTION = False
     SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{}@localhost/chess_api_test'.format(name)
