@@ -98,6 +98,21 @@ class TestMakeAMove:
 
         assert response.status_code == 400
 
+    def test_can_make_a_valid_move(self, client, db):
+        game = ChessGameFactory(password2="steve")
+        token = game.id
+
+        params = dict(password="bob", start="A2", end="A3")
+        response = client.post(self.endpoint.format(token), data=json.dumps(params),
+                               content_type='application/json')
+
+        assert response.status_code == 200
+
+        data = load_response(response)
+
+        assert data['board'].split('/')[5][0] == 'P'
+        assert False, "Fix issue in fen representation of board under these conditions."
+
 
 class TestGetBoard:
 

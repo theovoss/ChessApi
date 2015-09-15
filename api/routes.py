@@ -43,10 +43,20 @@ def move(game_token, start, end, password):
     if game:
         if game.password1 is None or game.password2 is None:
             abort(400, "This game needs more players.")
+
         # valid game, check if valid move
-        chess_game = Chess(game.board)
-        chess_game.move(start, end)
-    pass
+        chess = Chess(game.board)
+        success = chess.move(start, end)
+
+        if not success:
+            abort(400, "Moving from {} to {} is an invalid move.".format(start, end))
+
+        data = dict(token=game.id, board=chess.generate_fen())
+        response = jsonify(data)
+        response.status_code = 200
+        return response
+    else:
+        abort(400, "The game does not exist.")
 
 
 @blueprint.route('<game_token>/', methods=['GET'])
@@ -58,7 +68,7 @@ def players(game_token):
 @blueprint.route('create/', methods=['POST'])
 @parser.use_kwargs(password_args)
 def create_game(password):
-    game_json = ChessBoardLibrary().board
+    game_json = Chess().board
     game = dbChessGame.create(password1=password, board=game_json)
     token = game.id
     links = {}
