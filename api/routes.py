@@ -20,14 +20,14 @@ password_args = {
 }
 
 
-@blueprint.route('<game_token>/', methods=['GET'])
+@blueprint.route('game/<game_token>/', methods=['GET'])
 def board(game_token):
     # current state of the chess board.
     db_game = dbChessGame.query.get(game_token)
     if db_game:
         game = Chess(existing_board=db_game.board)
-        data = game.board.generate_fen()
-        response = jsonify(data)
+        data = game.generate_fen()
+        response = jsonify(dict(board=data))
         response.status_code = 200
     else:
         abort(400, "That game doesn't exits.")

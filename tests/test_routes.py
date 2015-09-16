@@ -2,6 +2,8 @@ import json
 
 from .factories import ChessGameFactory
 
+starting_fen_configuration = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
 
 def load_response(response, key=None):
     """Load data (dict, list, etc.) from a Flask response object."""
@@ -118,4 +120,11 @@ class TestGetBoard:
     endpoint = "/chess/game/{}/"
 
     def test_can_get_starting_board_state(self, client, db):
-        pass
+        game = ChessGameFactory(password2="dummy")
+        token = game.id
+
+        response = client.get(self.endpoint.format(token), content_type='application/json')
+
+        data = load_response(response)
+
+        assert data['board'] == starting_fen_configuration
