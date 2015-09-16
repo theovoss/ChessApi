@@ -111,7 +111,6 @@ class TestMakeAMove:
         data = load_response(response)
 
         assert data['board'].split('/')[5][0] == 'P'
-        assert False, "Fix issue in fen representation of board under these conditions."
 
 
 class TestGetBoard:
