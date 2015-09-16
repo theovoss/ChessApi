@@ -19,3 +19,6 @@ git+git://github.com/theovoss/Chess.git
 
 # time
 arrow ~= 0.5.4
+
+# deployment
+gunicorn ~= 19.3.0
