@@ -1,1 +1,1 @@
-web: gunicorn api.app:create_app\(\) -b 0.0.0.0:$port -w 3
+web: gunicorn api.app:create_app\(\) -b 0.0.0.0:5000 -w 3
