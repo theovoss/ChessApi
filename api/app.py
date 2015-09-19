@@ -16,15 +16,14 @@ def create_app(config_object=ProdConfig, _db=db):
 
 
 def register_extensions(app, _db):
-    if _db is not None:
-        url = app.config['SQLALCHEMY_DATABASE_URI']
-        if not database_exists(url):
-            create_database(url)
-        _db.app = app
-        _db.init_app(app)
-        with app.app_context():
-            _db.create_all()
-        migrate.init_app(app, _db)
+    url = app.config['SQLALCHEMY_DATABASE_URI']
+    if not database_exists(url):
+        create_database(url)
+    _db.app = app
+    _db.init_app(app)
+    # with app.app_context():
+    #     _db.create_all()
+    migrate.init_app(app, _db)
 
 
 def register_blueprints(app):
