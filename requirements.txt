@@ -22,3 +22,6 @@ arrow ~= 0.5.4
 
 # deployment
 gunicorn ~= 19.3.0
+
+# Testing
+factory-boy
