@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, url_for
 
-from webargs import Arg
+from webargs import fields
 from webargs.flaskparser import FlaskParser
 
 from chess.chess import Chess
@@ -10,13 +10,13 @@ blueprint = Blueprint("chess", __name__, url_prefix='/chess/')
 parser = FlaskParser(('query', 'json'))
 
 move_args = {
-    'start': Arg(str, required=True),
-    'end': Arg(str, required=True),
-    'password': Arg(str, required=True),
+    'start': fields.Str(required=True),
+    'end': fields.Str(required=True),
+    'password': fields.Str(required=True),
 }
 
 password_args = {
-    'password': Arg(str, required=True)
+    'password': fields.Str(required=True)
 }
 
 
