@@ -24,3 +24,4 @@ gunicorn ~= 19.3.0
 
 # Testing
 factory-boy
+pytest
