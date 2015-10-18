@@ -1,6 +1,5 @@
-Werkzeug ~= 0.10
-
 # Flask Libraries
+Werkzeug ~= 0.10
 Flask ~= 0.10.1
 webargs ~= 0.16
 Flask-SQLAlchemy ~= 2.0

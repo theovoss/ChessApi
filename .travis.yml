@@ -12,6 +12,7 @@ env:
   - RANDOM_SEED=12345
 
 install:
+- pip install --upgrade pip
 - pip install coveralls scrutinizer-ocular
 
 before_script:
