@@ -1,23 +1,12 @@
-import arrow
-import uuid
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy import exc
 
+from .utilities import get_current_datetime, generate_uuid
+
 db = SQLAlchemy()
 migrate = Migrate()
-
-
-def get_current_datetime():
-    return arrow.now().datetime
-
-
-def generate_uuid():
-    an_id = str(uuid.uuid4())
-    print("id created is: " + an_id)
-    return an_id
 
 
 class Model:
@@ -26,7 +15,7 @@ class Model:
 
     __table_args__ = {'extend_existing': True}
 
-    id = db.Column(db.String(), nullable=False, default=generate_uuid, primary_key=True)
+    id = db.Column(UUID(), nullable=False, default=generate_uuid, primary_key=True)
     archived = db.Column(db.Integer, nullable=False, default=0)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=get_current_datetime)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=get_current_datetime)
@@ -70,11 +59,28 @@ class Model:
         return ret_val
 
 
-class ChessGame(Model, db.Model):
+user_games_table = db.Table('user_games', db.Model.metadata,
+                            db.Column('user_id', UUID(), db.ForeignKey("users.id")),
+                            db.Column('game_id', UUID(), db.ForeignKey("games.id")))
 
-    __tablename__ = 'chess_game'
 
-    password1 = db.Column(db.String())
-    password2 = db.Column(db.String())
+class Game(Model, db.Model):
+
+    __tablename__ = 'games'
+
     board = db.Column(JSONB)
     move_history = db.Column(JSONB)
+
+
+class User(Model, db.Model):
+
+    __tablename__ = 'users'
+
+    password = db.Column(db.String())
+    name = db.Column(db.String())
+    email = db.Column(db.String())
+
+    games = db.relationship("Game",
+                            secondary=user_games_table,
+                            lazy="joined",
+                            backref="players")

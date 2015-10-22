@@ -1,6 +1,7 @@
 import json
 
-from .factories import ChessGameFactory
+from .factories import GameFactory
+from .utilities import generate_uuid
 
 starting_fen_configuration = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -43,7 +44,7 @@ class TestJoinGame:
     endpoint = "/chess/join/{}/"
 
     def test_can_join_a_game(self, client, db):
-        game = ChessGameFactory()
+        game = GameFactory()
         token = game.id
 
         params = dict(password="playa 2")
@@ -57,7 +58,7 @@ class TestJoinGame:
         assert game.id in data['links']['move']
 
     def test_cant_join_game_if_already_full(self, client, db):
-        game = ChessGameFactory(password2="2nd player")
+        game = GameFactory(password2="2nd player")
         token = game.id
 
         params = dict(password="playa 2")
@@ -67,7 +68,7 @@ class TestJoinGame:
         assert response.status_code == 400
 
     def test_cant_join_non_existent_game(self, client, db):
-        token = "This is not a game"
+        token = generate_uuid()
 
         params = dict(password="playa 2")
         response = client.post(self.endpoint.format(token), data=json.dumps(params),
@@ -81,7 +82,7 @@ class TestMakeAMove:
     endpoint = "/chess/move/{}/"
 
     def test_cant_make_a_move_if_the_game_doesnt_have_two_players(self, client, db):
-        game = ChessGameFactory(password1="bob")
+        game = GameFactory(password1="bob")
         token = game.id
 
         params = dict(password="bob", start="A2", end="A3")
@@ -91,7 +92,7 @@ class TestMakeAMove:
         assert response.status_code == 400
 
     def test_cant_make_a_move_if_the_move_is_invalid(self, client, db):
-        game = ChessGameFactory(password2="steve")
+        game = GameFactory(password2="steve")
         token = game.id
 
         params = dict(password="bob", start="A1", end="A2")
@@ -101,7 +102,7 @@ class TestMakeAMove:
         assert response.status_code == 400
 
     def test_can_make_a_valid_move(self, client, db):
-        game = ChessGameFactory(password2="steve")
+        game = GameFactory(password2="steve")
         token = game.id
 
         params = dict(password="bob", start="A2", end="A3")
@@ -120,7 +121,7 @@ class TestGetBoard:
     endpoint = "/chess/game/{}/"
 
     def test_can_get_starting_board_state(self, client, db):
-        game = ChessGameFactory(password2="dummy")
+        game = GameFactory(password2="dummy")
         token = game.id
 
         response = client.get(self.endpoint.format(token), content_type='application/json')
@@ -128,3 +129,9 @@ class TestGetBoard:
         data = load_response(response)
 
         assert data['board'] == starting_fen_configuration
+
+
+    def test_can_get_all_users_games(self, client, db):
+        game = GameFactory()
+        user1 = UserFactory()
+        user2 = UserFactory()

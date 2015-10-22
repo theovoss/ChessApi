@@ -4,7 +4,7 @@ from webargs import fields
 from webargs.flaskparser import FlaskParser
 
 from chess.chess import Chess
-from .database import ChessGame as dbChessGame
+from .database import Game as Game
 
 blueprint = Blueprint("chess", __name__, url_prefix='/chess/')
 parser = FlaskParser(('query', 'json'))
@@ -23,7 +23,7 @@ password_args = {
 @blueprint.route('game/<game_token>/', methods=['GET'])
 def board(game_token):
     # current state of the chess board.
-    db_game = dbChessGame.query.get(game_token)
+    db_game = Game.query.get(game_token)
     if db_game:
         game = Chess(existing_board=db_game.board)
         data = game.generate_fen()
@@ -38,7 +38,7 @@ def board(game_token):
 @parser.use_kwargs(move_args)
 def move(game_token, start, end, password):
     # aborts if an invalid move. otherwise returns new board state after the move.
-    game = dbChessGame.query.get(game_token)
+    game = Game.query.get(game_token)
 
     if game:
         if game.password1 is None or game.password2 is None:
@@ -69,7 +69,7 @@ def players(game_token):
 @parser.use_kwargs(password_args)
 def create_game(password):
     game_json = Chess().board
-    game = dbChessGame.create(password1=password, board=game_json)
+    game = Game.create(password1=password, board=game_json)
     token = game.id
     links = {}
     links['invite'] = url_for('chess.join_game', game_token=game.id)
@@ -86,7 +86,7 @@ def create_game(password):
 @parser.use_kwargs(password_args)
 def join_game(game_token, password):
     # takes a game token and returns one. aborts if two players are already part of the game.
-    game = dbChessGame.query.get(game_token)
+    game = Game.query.get(game_token)
 
     if game:
         if game.password1 and game.password2:

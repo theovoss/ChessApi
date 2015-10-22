@@ -1,5 +1,13 @@
+import uuid
+
 from sqlalchemy.engine import reflection
 from sqlalchemy.schema import MetaData, Table, DropTable, ForeignKeyConstraint, DropConstraint
+
+
+def generate_uuid():
+    an_id = uuid.uuid4()
+    print("id created is: " + str(an_id))
+    return an_id
 
 
 def db_drop_everything(database):

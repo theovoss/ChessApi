@@ -2,10 +2,10 @@
 	"folders":
 	[
 		{
-			"path": "/Users/theovoss/Documents/programming/Github/chess_api"
+			"path": "../Chess"
 		},
 		{
-			"path": "/Users/theovoss/Documents/programming/Github/Chess"
+			"path": "."
 		}
 	]
 }
