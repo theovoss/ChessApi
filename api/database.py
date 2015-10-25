@@ -15,7 +15,7 @@ class Model:
 
     __table_args__ = {'extend_existing': True}
 
-    id = db.Column(UUID(), nullable=False, default=generate_uuid, primary_key=True)
+    id = db.Column(UUID(as_uuid=True), nullable=False, default=generate_uuid, primary_key=True)
     archived = db.Column(db.Integer, nullable=False, default=0)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=get_current_datetime)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=get_current_datetime)
@@ -42,8 +42,13 @@ class Model:
         if commit:
             try:
                 db.session.commit()
-            except exc.SQLAlchemyError:
+            except exc.SQLAlchemyError as e:
+                print("rolling back")
+                print("exception is:")
+                print(e)
                 db.session.rollback()
+        else:
+            print("didn't commit")
         return self
 
     def delete(self, commit=True):
@@ -78,9 +83,28 @@ class User(Model, db.Model):
 
     password = db.Column(db.String())
     name = db.Column(db.String())
-    email = db.Column(db.String())
+    email = db.Column(db.String(), unique=True)
 
     games = db.relationship("Game",
                             secondary=user_games_table,
                             lazy="joined",
                             backref="players")
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        print("id is: {}".format(self.id))
+        try:
+            return unicode(self.id)  # python 2
+        except NameError:
+            return str(self.id)  # python 3

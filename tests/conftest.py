@@ -1,10 +1,13 @@
 import pytest
 import sqlalchemy_utils
 
-from .utilities import db_drop_everything
 from api.database import db as _db
 from api.settings import TestConfig
 from api.app import create_app
+
+from .utilities import db_drop_everything
+from .factories import UserFactory
+from .authorized_client import AuthorizedClient
 
 
 def pytest_configure(config):
@@ -36,6 +39,19 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+def get_authorized_client(app, email, password, user=None):
+    if user is None:
+        user = UserFactory()
+    client = AuthorizedClient(app, email, password)
+    return client
+
+
+@pytest.fixture
+def authorized_client(app):
+    client = get_authorized_client(app, 'test@example.com', 'password')
+    return client
 
 
 @pytest.yield_fixture

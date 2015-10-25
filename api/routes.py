@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, abort, url_for
+from flask.ext.login import login_required
 
 from webargs import fields
 from webargs.flaskparser import FlaskParser
@@ -36,6 +37,7 @@ def board(game_token):
 
 @blueprint.route('move/<game_token>/', methods=['POST'])
 @parser.use_kwargs(move_args)
+@login_required
 def move(game_token, start, end, password):
     # aborts if an invalid move. otherwise returns new board state after the move.
     game = Game.query.get(game_token)
@@ -66,7 +68,7 @@ def players(game_token):
 
 
 @blueprint.route('create/', methods=['POST'])
-@parser.use_kwargs(password_args)
+@login_required
 def create_game(password):
     game_json = Chess().board
     game = Game.create(password1=password, board=game_json)
@@ -83,7 +85,7 @@ def create_game(password):
 
 
 @blueprint.route('join/<game_token>/', methods=['POST'])
-@parser.use_kwargs(password_args)
+@login_required
 def join_game(game_token, password):
     # takes a game token and returns one. aborts if two players are already part of the game.
     game = Game.query.get(game_token)
