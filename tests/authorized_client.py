@@ -1,11 +1,14 @@
 import json
 import base64
 
+from .factories import UserFactory
+
 
 class AuthorizedClient:
 
     def __init__(self, app, email, password):
         self.client = app.test_client()
+        self.user = UserFactory(email=email, password=password)
         self.email = email
         self.password = password
         self.auth_header_value = self.generate_basic_auth_header()

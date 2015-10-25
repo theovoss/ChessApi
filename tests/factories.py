@@ -10,7 +10,7 @@ default_chess_board = chess.ChessBoard().export()
 
 
 def get_uuid():
-    return uuid.uuid4()
+    return factory.LazyAttribute(lambda n: uuid.uuid4())
 
 
 def get_random_string():
@@ -30,9 +30,9 @@ class GameFactory(BaseFactory):
     board = default_chess_board
     move_history = {}
 
-    @factory.post_generation
-    def _players(self, create, extracted, **kwargs):
-        self.players = [UserFactory, UserFactory]
+    # @factory.post_generation
+    # def _players(self, create, extracted, **kwargs):
+    #     self.players = [UserFactory, UserFactory]
 
     class Meta:
         model = Game

@@ -65,8 +65,8 @@ class Model:
 
 
 user_games_table = db.Table('user_games', db.Model.metadata,
-                            db.Column('user_id', UUID(), db.ForeignKey("users.id")),
-                            db.Column('game_id', UUID(), db.ForeignKey("games.id")))
+                            db.Column('user_id', UUID(as_uuid=True), db.ForeignKey("users.id")),
+                            db.Column('game_id', UUID(as_uuid=True), db.ForeignKey("games.id")))
 
 
 class Game(Model, db.Model):
@@ -75,6 +75,12 @@ class Game(Model, db.Model):
 
     board = db.Column(JSONB)
     move_history = db.Column(JSONB)
+
+    @property
+    def is_full(self):
+        if len(self.players) == len(self.board['players']):
+            return True
+        return False
 
 
 class User(Model, db.Model):
@@ -108,3 +114,8 @@ class User(Model, db.Model):
             return unicode(self.id)  # python 2
         except NameError:
             return str(self.id)  # python 3
+
+    def valid_password(self, password):
+        if password == self.password:
+            return True
+        return False
