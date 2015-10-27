@@ -15,6 +15,10 @@ move_args = {
     'end': fields.Str(required=True),
 }
 
+game_args = {
+    'color': fields.Str(required=False),
+}
+
 
 @blueprint.route('game/<game_token>/', methods=['GET'])
 def board(game_token):
@@ -70,9 +74,16 @@ def players(game_token):
 
 
 @blueprint.route('create/', methods=['POST'])
+@parser.use_kwargs(game_args)
 @login_required
-def create_game():
-    game_json = Chess().board
+def create_game(color="white"):
+    game_json = Chess().export()
+
+    colors = [game_json['players'][player]['color'] for player in game_json['players']]
+    if color in colors:
+        for player in game_json['players']:
+            if game_json['players'][player]['color'] == color:
+                game_json['players'][player]['name'] = current_user.name
     game = Game.create(board=game_json, players=[current_user])
     token = game.id
     links = {}
@@ -87,8 +98,9 @@ def create_game():
 
 
 @blueprint.route('join/<game_token>/', methods=['POST'])
+@parser.use_kwargs(game_args)
 @login_required
-def join_game(game_token):
+def join_game(game_token, color="black"):
     # takes a game token and returns one. aborts if two players are already part of the game.
     game = Game.query.get(game_token)
 
@@ -96,6 +108,15 @@ def join_game(game_token):
         if len(game.players) == len(game.board['players']):
             abort(400, "All players have already joined this game.")
         else:
+            game_json = game.board
+            colors = [game_json['players'][player]['color'] for player in game_json['players'] if game_json['players'][player].get('name') is None]
+            if color in colors:
+                for player in game_json['players']:
+                    if game_json['players'][player]['color'] == color:
+                        game_json['players'][player]['name'] = current_user.name
+                    else:
+                        abort(400, "The Color: {} is already taken.".format(color))
+            game.board = game_json
             game.players.append(current_user)
             game.save()
             links = {}
