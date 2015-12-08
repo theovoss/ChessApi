@@ -3,6 +3,7 @@ import pytest
 
 from .factories import GameFactory, UserFactory
 from .utilities import generate_uuid
+from .authorized_client import AuthorizedClient
 
 starting_fen_configuration = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -84,8 +85,8 @@ class TestJoinGame:
 
     def test_cant_join_game_if_already_full(self, authorized_client, db):
         game = GameFactory()
-        game.players.append(UserFactory())
-        game.players.append(UserFactory())
+        game.player_1 = UserFactory()
+        game.player_2 = UserFactory()
         game.save()
 
         token = game.id
@@ -136,6 +137,34 @@ class TestMakeAMove:
         data = load_response(response)
 
         assert data['board'].split('/')[5][0] == 'P'
+
+    def test_cant_make_a_move_out_of_turn(self, authorized_client, db):
+        game = GameFactory(players=[authorized_client.user, UserFactory()])
+        token = game.id
+
+        params = dict(start="A7", end="A6")
+        response = authorized_client.post(self.endpoint.format(token), data=params)
+
+        assert response.status_code == 400
+
+    def test_cant_make_a_move_if_for_the_opponent(self, app, authorized_client, db):
+        client = AuthorizedClient(app, "cheater@example.com", "password")
+
+        create_endpoint = "/chess/create/"
+        join_endpoint = "/chess/join/{}/"
+        response = authorized_client.post(create_endpoint)
+        assert response.status_code == 200
+
+        data = load_response(response)
+        game_id = data['token']
+        response = client.post(join_endpoint.format(game_id))
+        assert response.status_code == 200
+
+        params = dict(start="A2", end="A3")
+
+        response = client.post(self.endpoint.format(game_id), data=params)
+
+        assert response.status_code == 400
 
 
 class TestGetBoard:

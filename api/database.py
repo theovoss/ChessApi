@@ -75,6 +75,22 @@ class Game(Model, db.Model):
 
     board = db.Column(JSONB)
     move_history = db.Column(JSONB)
+    player_1_id = db.Column(UUID, nullable=False)
+    player_2_id = db.Column(UUID)
+
+    player_1 = db.relationship("User")
+    player_2 = db.relationship("User")
+
+    @property
+    def current_player(self):
+        if self.board['players']['current'] == "Player 1":
+            return self.player_1
+        else:
+            return self.player_2
+
+    @property
+    def players(self):
+        return [self.player_1, self.player_2]
 
     @property
     def is_full(self):
@@ -93,8 +109,7 @@ class User(Model, db.Model):
 
     games = db.relationship("Game",
                             secondary=user_games_table,
-                            lazy="joined",
-                            backref="players")
+                            lazy="joined")
 
     @property
     def is_authenticated(self):

@@ -52,8 +52,15 @@ def move(game_token, start, end):
         if not game.is_full:
             abort(400, "This game needs more players.")
 
-        # valid game, check if valid move
         chess = Chess(game.board)
+
+        for player in game.board['players']:
+            if game.board['players'][player]['id'] == current_user.id:
+                color = game.board['players'][player]['color']
+                print("Looping through players")
+                if color[0] != chess._board.current_players_turn:
+                    abort(400, "Not your turn cheater!")
+        # valid game, check if valid move
         success = chess.move(start, end)
 
         if not success:
@@ -79,12 +86,7 @@ def players(game_token):
 def create_game(color="white"):
     game_json = Chess().export()
 
-    colors = [game_json['players'][player]['color'] for player in game_json['players']]
-    if color in colors:
-        for player in game_json['players']:
-            if game_json['players'][player]['color'] == color:
-                game_json['players'][player]['name'] = current_user.name
-    game = Game.create(board=game_json, players=[current_user])
+    game = Game.create(board=game_json, player_1=current_user)
     token = game.id
     links = {}
     links['invite'] = url_for('chess.join_game', game_token=game.id)
@@ -114,6 +116,7 @@ def join_game(game_token, color="black"):
                 for player in game_json['players']:
                     if game_json['players'][player]['color'] == color:
                         game_json['players'][player]['name'] = current_user.name
+                        game_json['players'][player]['id'] = current_user.id
                     else:
                         abort(400, "The Color: {} is already taken.".format(color))
             game.board = game_json

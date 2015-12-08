@@ -40,6 +40,7 @@ class GameFactory(BaseFactory):
 
 class UserFactory(BaseFactory):
     password = get_random_string()
+    email = get_random_string()
     name = get_random_string()
 
     class Meta:
