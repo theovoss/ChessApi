@@ -26,18 +26,6 @@ class BaseFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
 
 
-class GameFactory(BaseFactory):
-    board = default_chess_board
-    move_history = {}
-
-    # @factory.post_generation
-    # def _players(self, create, extracted, **kwargs):
-    #     self.players = [UserFactory, UserFactory]
-
-    class Meta:
-        model = Game
-
-
 class UserFactory(BaseFactory):
     password = get_random_string()
     email = get_random_string()
@@ -45,3 +33,12 @@ class UserFactory(BaseFactory):
 
     class Meta:
         model = User
+
+
+class GameFactory(BaseFactory):
+    board = default_chess_board
+    move_history = {}
+    player_1 = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = Game

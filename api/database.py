@@ -64,22 +64,17 @@ class Model:
         return ret_val
 
 
-user_games_table = db.Table('user_games', db.Model.metadata,
-                            db.Column('user_id', UUID(as_uuid=True), db.ForeignKey("users.id")),
-                            db.Column('game_id', UUID(as_uuid=True), db.ForeignKey("games.id")))
-
-
 class Game(Model, db.Model):
 
     __tablename__ = 'games'
 
     board = db.Column(JSONB)
     move_history = db.Column(JSONB)
-    player_1_id = db.Column(UUID, nullable=False)
-    player_2_id = db.Column(UUID)
+    player_1_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
+    player_2_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'))
 
-    player_1 = db.relationship("User")
-    player_2 = db.relationship("User")
+    player_1 = db.relationship("User", foreign_keys="Game.player_1_id")
+    player_2 = db.relationship("User", foreign_keys="Game.player_2_id")
 
     @property
     def current_player(self):
@@ -91,6 +86,18 @@ class Game(Model, db.Model):
     @property
     def players(self):
         return [self.player_1, self.player_2]
+
+    @players.setter
+    def players(self, value):
+        if isinstance(value, list):
+            if len(value) > 1:
+                if not self.player_1_id:
+                    self.player_1_id = value[0].id
+                if not self.player_2_id:
+                    self.player_2_id = value[1].id
+            else:
+                if not self.player_1_id:
+                    self.player_1_id = value[0].id
 
     @property
     def is_full(self):
@@ -106,10 +113,6 @@ class User(Model, db.Model):
     password = db.Column(db.String())
     name = db.Column(db.String())
     email = db.Column(db.String(), unique=True)
-
-    games = db.relationship("Game",
-                            secondary=user_games_table,
-                            lazy="joined")
 
     @property
     def is_authenticated(self):

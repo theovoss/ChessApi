@@ -55,7 +55,7 @@ def move(game_token, start, end):
         chess = Chess(game.board)
 
         for player in game.board['players']:
-            if game.board['players'][player]['id'] == current_user.id:
+            if game.current_player == current_user:
                 color = game.board['players'][player]['color']
                 print("Looping through players")
                 if color[0] != chess._board.current_players_turn:
