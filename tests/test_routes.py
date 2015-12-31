@@ -12,7 +12,6 @@ def load_response(response, key=None):
     """Load data (dict, list, etc.) from a Flask response object."""
     text = response.data.decode('utf-8')
     if text:
-        print(text)
         data = json.loads(text)
         if key:
             return data[key]
@@ -108,7 +107,7 @@ class TestMakeAMove:
     endpoint = "/chess/move/{}/"
 
     def test_cant_make_a_move_if_the_game_doesnt_have_two_players(self, authorized_client, db):
-        game = GameFactory(players=[authorized_client.user])
+        game = GameFactory(player_1=authorized_client.user)
         token = game.id
 
         params = dict(start="A2", end="A3")
@@ -117,7 +116,7 @@ class TestMakeAMove:
         assert response.status_code == 400
 
     def test_cant_make_a_move_if_the_move_is_invalid(self, authorized_client, db):
-        game = GameFactory(players=[authorized_client.user, UserFactory()])
+        game = GameFactory(player_1=authorized_client.user, player_2=UserFactory())
         token = game.id
 
         params = dict(start="A1", end="A2")
@@ -126,12 +125,14 @@ class TestMakeAMove:
         assert response.status_code == 400
 
     def test_can_make_a_valid_move(self, authorized_client, db):
-        game = GameFactory(players=[authorized_client.user, UserFactory()])
+        game = GameFactory(player_1=authorized_client.user, player_2=UserFactory())
+
+        assert len(game.players) == 2
+
         token = game.id
 
         params = dict(start="A2", end="A3")
         response = authorized_client.post(self.endpoint.format(token), data=params)
-
         assert response.status_code == 200
 
         data = load_response(response)
@@ -139,7 +140,7 @@ class TestMakeAMove:
         assert data['board'].split('/')[5][0] == 'P'
 
     def test_cant_make_a_move_out_of_turn(self, authorized_client, db):
-        game = GameFactory(players=[authorized_client.user, UserFactory()])
+        game = GameFactory(player_1=authorized_client.user, player_2=UserFactory())
         token = game.id
 
         params = dict(start="A7", end="A6")
@@ -158,6 +159,7 @@ class TestMakeAMove:
         data = load_response(response)
         game_id = data['token']
         response = client.post(join_endpoint.format(game_id))
+
         assert response.status_code == 200
 
         params = dict(start="A2", end="A3")
@@ -182,11 +184,9 @@ class TestGetBoard:
         assert data['board'] == starting_fen_configuration
 
     def test_can_get_all_users_games(self, authorized_client, db):
-        game = GameFactory()
         user1 = UserFactory()
         user2 = UserFactory()
-        game.players.append(user1)
-        game.players.append(user2)
+        game = GameFactory(player_1=user1, player_2=user2)
 
         response = authorized_client.get(self.endpoint.format(str(game.id)))
 

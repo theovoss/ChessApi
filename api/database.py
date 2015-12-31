@@ -101,7 +101,7 @@ class Game(Model, db.Model):
 
     @property
     def is_full(self):
-        if len(self.players) == len(self.board['players']):
+        if None not in self.players:
             return True
         return False
 

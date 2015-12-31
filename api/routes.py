@@ -16,7 +16,7 @@ move_args = {
 }
 
 game_args = {
-    'color': fields.Str(required=False),
+    'color': fields.Str(required=False, missing=None),
 }
 
 
@@ -55,11 +55,8 @@ def move(game_token, start, end):
         chess = Chess(game.board)
 
         for player in game.board['players']:
-            if game.current_player == current_user:
-                color = game.board['players'][player]['color']
-                print("Looping through players")
-                if color[0] != chess._board.current_players_turn:
-                    abort(400, "Not your turn cheater!")
+            if game.current_player != current_user:
+                abort(400, "Not your turn cheater!")
         # valid game, check if valid move
         success = chess.move(start, end)
 
@@ -111,14 +108,10 @@ def join_game(game_token, color="black"):
             abort(400, "All players have already joined this game.")
         else:
             game_json = game.board
-            colors = [game_json['players'][player]['color'] for player in game_json['players'] if game_json['players'][player].get('name') is None]
-            if color in colors:
-                for player in game_json['players']:
-                    if game_json['players'][player]['color'] == color:
-                        game_json['players'][player]['name'] = current_user.name
-                        game_json['players'][player]['id'] = current_user.id
-                    else:
-                        abort(400, "The Color: {} is already taken.".format(color))
+            colors = ["black", None] if game.player_2 is None else []
+
+            if color not in colors:
+                abort(400, "The color {} is not available.".format(color))
             game.board = game_json
             game.players.append(current_user)
             game.save()
