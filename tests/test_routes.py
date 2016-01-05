@@ -194,3 +194,30 @@ class TestGetBoard:
 
         assert user1.name in data['players']
         assert user2.name in data['players']
+
+
+class TestRoot:
+
+    endpoint = "chess/"
+
+    def test_root_shows_urls(self, client, app, db):
+        response = client.get(self.endpoint)
+        assert response.status_code == 200
+
+
+class TestUserCreation:
+
+    endpoint = "chess/create-user/"
+
+    def test_can_create_a_user(self, client, app, db):
+        params = dict(name="bob", email="virgin_test@example.com", password="password")
+        response = client.post(self.endpoint, data=json.dumps(params), content_type="application/json")
+        print(response.data)
+        assert response.status_code == 200
+
+    def test_cant_create_a_user_with_existing_email(self, client, app, db):
+        email = "slutty_test@example.com"
+        UserFactory(email=email)
+        params = dict(name="bob", email=email, password="password")
+        response = client.post(self.endpoint, data=json.dumps(params), content_type="application/json")
+        assert response.status_code == 400

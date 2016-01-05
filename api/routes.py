@@ -1,11 +1,11 @@
-from flask import Blueprint, jsonify, abort, url_for
+from flask import Blueprint, jsonify, abort, url_for, current_app
 from flask.ext.login import login_required, current_user
 
 from webargs import fields
 from webargs.flaskparser import FlaskParser
 
 from chess.chess import Chess
-from .database import Game as Game
+from .database import Game, User
 
 blueprint = Blueprint("chess", __name__, url_prefix='/chess/')
 parser = FlaskParser(('query', 'json'))
@@ -18,6 +18,32 @@ move_args = {
 game_args = {
     'color': fields.Str(required=False, missing=None),
 }
+
+create_user_args = {
+    'password': fields.Str(required=True),
+    'email': fields.Str(required=True),
+    'name': fields.Str()
+}
+
+
+def load_url_map(app):
+    url_map = {}
+    for rule in app.url_map.iter_rules():
+        url_format = rule.rule.replace("<", "%7B").replace(">", "%7D").replace("path:", "")
+        args = [arg.replace("{", "%7B").replace("}", "%7D") for arg in rule.arguments]
+        url_map[rule.endpoint] = dict(url=url_format,
+                                      arguments=args)
+
+    return url_map
+
+
+@blueprint.route('', methods=['GET'])
+def root():
+    routes = load_url_map(current_app)
+    print(routes)
+    response = jsonify(routes)
+    response.status_code = 200
+    return response
 
 
 @blueprint.route('game/<game_token>/', methods=['GET'])
@@ -75,6 +101,20 @@ def move(game_token, start, end):
 def players(game_token):
     # returns the current players for a game.
     pass
+
+
+@blueprint.route('create-user/', methods=['POST'])
+@parser.use_kwargs(create_user_args)
+def user_creation(email, password, name):
+    user = User.query.filter_by(email=email).first()
+    if user:
+        abort(400, "A user with that email already exist.")
+
+    User.create(email=email, password=password, name=name)
+    data = dict(success="yep")
+    response = jsonify(data)
+    response.status_code = 200
+    return response
 
 
 @blueprint.route('create/', methods=['POST'])
