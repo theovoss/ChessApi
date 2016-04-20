@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, abort, url_for, current_app
+from flask import Blueprint, jsonify, abort, url_for, current_app, render_template
 from flask.ext.login import login_required, current_user
 
 from webargs import fields
@@ -25,6 +25,23 @@ create_user_args = {
     'name': fields.Str()
 }
 
+# lowercase = black, uppercase = white
+piece_images = {
+    'p': 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Chess_pdt60.png',
+    'P': 'https://upload.wikimedia.org/wikipedia/commons/0/04/Chess_plt60.png',
+    'q': 'https://upload.wikimedia.org/wikipedia/commons/a/af/Chess_qdt60.png',
+    'Q': 'https://upload.wikimedia.org/wikipedia/commons/4/49/Chess_qlt60.png',
+    'k': 'https://upload.wikimedia.org/wikipedia/commons/e/e3/Chess_kdt60.png',
+    'K': 'https://upload.wikimedia.org/wikipedia/commons/3/3b/Chess_klt60.png',
+    'n': 'https://upload.wikimedia.org/wikipedia/commons/f/f1/Chess_ndt60.png',
+    'N': 'https://upload.wikimedia.org/wikipedia/commons/2/28/Chess_nlt60.png',
+    'r': 'https://upload.wikimedia.org/wikipedia/commons/a/a0/Chess_rdt60.png',
+    'R': 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Chess_rlt60.png',
+    'b': 'https://upload.wikimedia.org/wikipedia/commons/8/81/Chess_bdt60.png',
+    'B': 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Chess_blt60.png'
+}
+
+fake_board = {(7, 3): 'q', (4, 7): None, (1, 3): 'P', (6, 4): 'p', (3, 0): None, (5, 4): None, (0, 7): 'R', (5, 6): None, (0, 0): 'R', (1, 6): 'P', (5, 1): None, (3, 7): None, (0, 3): 'Q', (2, 5): None, (7, 2): 'b', (4, 0): None, (1, 2): 'P', (6, 7): 'p', (3, 3): None, (0, 6): 'N', (7, 6): 'n', (4, 4): None, (6, 3): 'p', (1, 5): 'P', (3, 6): None, (0, 4): 'K', (7, 7): 'r', (5, 7): None, (5, 3): None, (4, 1): None, (1, 1): 'P', (0, 1): 'N', (3, 2): None, (2, 6): None, (6, 6): 'p', (5, 0): None, (7, 1): 'n', (4, 5): None, (2, 2): None, (5, 5): None, (1, 4): 'P', (6, 0): 'p', (7, 5): 'b', (0, 5): 'B', (2, 1): None, (4, 2): None, (1, 0): 'P', (6, 5): 'p', (3, 5): None, (2, 7): None, (7, 0): 'r', (4, 6): None, (3, 4): None, (6, 1): 'p', (3, 1): None, (2, 4): None, (7, 4): 'k', (2, 0): None, (6, 2): 'p', (4, 3): None, (1, 7): 'P', (2, 3): None, (5, 2): None, (0, 2): 'B'}
 
 def load_url_map(app):
     url_map = {}
@@ -42,6 +59,8 @@ def root():
     routes = load_url_map(current_app)
     print(routes)
     response = jsonify(routes)
+    import pdb
+    pdb.set_trace()
     response.status_code = 200
     return response
 
@@ -49,22 +68,24 @@ def root():
 @blueprint.route('game/<game_token>/', methods=['GET'])
 def board(game_token):
     # current state of the chess board.
-    db_game = Game.query.get(game_token)
-
+    # db_game = Game.query.get(game_token)
+    db_game = fake_board
     if db_game:
-        game = Chess(existing_board=db_game.board)
-        data = game.generate_fen()
-        players = []
+        # game = Chess(existing_board=db_game.board)
+        # data = game.generate_fen()
+        # render_template('board.html', rows=game._board.rows, columns=game._board.columns, board=game.board)
+        return render_template('board.html', rows=8, columns=8, board=fake_board, images=piece_images)
+        # players = []
 
-        for player in db_game.players:
-            players.append(player.name)
+        # for player in db_game.players:
+        #     players.append(player.name)
 
-        response = jsonify(dict(board=data, players=players))
-        response.status_code = 200
+        # response = jsonify(dict(board=data, players=players))
+        # response.status_code = 200
     else:
         abort(400, "That game doesn't exits.")
 
-    return response
+    # return response
 
 
 @blueprint.route('move/<game_token>/', methods=['POST'])
@@ -105,7 +126,7 @@ def players(game_token):
 
 @blueprint.route('create-user/', methods=['POST'])
 @parser.use_kwargs(create_user_args)
-def user_creation(email, password, name):
+def create_user(email, password, name):
     user = User.query.filter_by(email=email).first()
     if user:
         abort(400, "A user with that email already exist.")
