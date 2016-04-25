@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, abort, url_for, current_app, render_template
+from flask import Blueprint, jsonify, abort, url_for, current_app, render_template, request
 from flask.ext.login import login_required, current_user
 
 from webargs import fields
@@ -25,6 +25,11 @@ create_user_args = {
     'name': fields.Str()
 }
 
+def get_color(code):
+    if code.isupper():
+        return "white"
+    return "black"
+
 # lowercase = black, uppercase = white
 piece_images = {
     'p': 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Chess_pdt60.png',
@@ -42,6 +47,85 @@ piece_images = {
 }
 
 fake_board = {(7, 3): 'q', (4, 7): None, (1, 3): 'P', (6, 4): 'p', (3, 0): None, (5, 4): None, (0, 7): 'R', (5, 6): None, (0, 0): 'R', (1, 6): 'P', (5, 1): None, (3, 7): None, (0, 3): 'Q', (2, 5): None, (7, 2): 'b', (4, 0): None, (1, 2): 'P', (6, 7): 'p', (3, 3): None, (0, 6): 'N', (7, 6): 'n', (4, 4): None, (6, 3): 'p', (1, 5): 'P', (3, 6): None, (0, 4): 'K', (7, 7): 'r', (5, 7): None, (5, 3): None, (4, 1): None, (1, 1): 'P', (0, 1): 'N', (3, 2): None, (2, 6): None, (6, 6): 'p', (5, 0): None, (7, 1): 'n', (4, 5): None, (2, 2): None, (5, 5): None, (1, 4): 'P', (6, 0): 'p', (7, 5): 'b', (0, 5): 'B', (2, 1): None, (4, 2): None, (1, 0): 'P', (6, 5): 'p', (3, 5): None, (2, 7): None, (7, 0): 'r', (4, 6): None, (3, 4): None, (6, 1): 'p', (3, 1): None, (2, 4): None, (7, 4): 'k', (2, 0): None, (6, 2): 'p', (4, 3): None, (1, 7): 'P', (2, 3): None, (5, 2): None, (0, 2): 'B'}
+fake_board2 = {
+                "board": {
+                    "Player 1": {
+                        "pawn": [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7]],
+                        "knight": [[0, 1], [0, 6]],
+                        "rook": [[0, 0], [0, 7]],
+                        "bishop": [[0, 2], [0, 5]],
+                        "king": [[0, 4]],
+                        "queen": [[0, 3]]
+                    },
+                    "Player 2": {
+                        "pawn": [[6, 0], [6, 1], [6, 2], [6, 3], [6, 4], [6, 5], [6, 6], [6, 7]],
+                        "knight": [[7, 1], [7, 6]],
+                        "rook": [[7, 0], [7, 7]],
+                        "bishop": [[7, 2], [7, 5]],
+                        "king": [[7, 4]],
+                        "queen": [[7, 3]]
+                    }
+                },
+                "pieces": {
+                    "pawn": {
+                        "moves": [{
+                            "directions": [[1, 0], [-1, 0]],
+                            "conditions": ["distance_of_one", "doesnt_land_on_piece", "directional"]
+                        },
+                        {
+                            "directions": [[1, 1], [1, -1], [-1, 1], [-1, -1]],
+                            "conditions": ["ends_on_enemy", "distance_of_one", "directional", "en_passant"]
+                        },
+                        {
+                            "directions": [[2, 0], [-2, 0]],
+                            "conditions": ["doesnt_land_on_piece", "directional", "first_move", "cant_jump_pieces", "distance_of_one"]
+                        }]
+                    },
+                    "rook": {
+                        "moves": [{
+                            "directions": [[1, 0], [0, 1], [-1, 0], [0, -1]],
+                            "conditions": ["doesnt_land_on_own_piece", "cant_jump_pieces"]
+                        },
+                        {
+                            "directions": [[0, 2], [0, -3]],
+                            "conditions": ["castling"]
+                        }]
+                    },
+                    "knight": {
+                        "moves": [{
+                            "directions": [[2, 1], [2, -1], [1, 2], [1, -2], [-1, 2], [-1, -2], [-2, 1], [-2, -1]],
+                            "conditions": ["doesnt_land_on_own_piece", "distance_of_one"]
+                        }]
+                    },
+                    "bishop": {
+                        "moves": [{
+                            "directions": [[-1, -1], [1, 1], [-1, 1], [1, -1]],
+                            "conditions": ["doesnt_land_on_own_piece", "cant_jump_pieces"]
+                        }]
+                    },
+                    "queen": {
+                        "moves": [{
+                            "directions": [[-1, -1], [1, 1], [-1, 1], [1, -1], [1, 0], [0, 1], [0, -1], [-1, 0]],
+                            "conditions": ["doesnt_land_on_own_piece", "cant_jump_pieces"]
+                        }]
+                    },
+                    "king": {
+                        "moves": [{
+                            "directions": [[-1, -1], [1, 1], [-1, 1], [1, -1], [1, 0], [0, 1], [0, -1], [-1, 0]],
+                            "conditions": ["doesnt_land_on_own_piece", "distance_of_one", "doesnt_end_in_check"]
+                        },
+                        {
+                            "directions": [[0, -2], [0, 2]],
+                            "conditions": ["castling"]
+                        }]
+                    }
+                },
+                'end_game': {},
+                'players': {
+                    "Player 1": {"direction": [1, 0], "color": "white", "starts": True},
+                    "Player 2": {"direction": [-1, 0], "color": "black", "starts": False},
+                    "current": "Player 1"}}
+
 
 def load_url_map(app):
     url_map = {}
@@ -67,14 +151,25 @@ def root():
 
 @blueprint.route('game/<game_token>/', methods=['GET'])
 def board(game_token):
+    db_game = fake_board
+    destinations = []
+    if request.args:
+        game = Chess(existing_board=fake_board2)
+        input_id = min([k for k in request.args])
+        input_piece = request.args[input_id]
+        row, col = input_id.split('.')
+        index = (int(row), int(col))
+        destinations = game.destinations(index)
+
+        print("Pressed row: {} col: {}".format(row, col))
+        print("Piece is a: {}".format(get_color(input_piece) + " " + input_piece))
     # current state of the chess board.
     # db_game = Game.query.get(game_token)
-    db_game = fake_board
     if db_game:
         # game = Chess(existing_board=db_game.board)
         # data = game.generate_fen()
         # render_template('board.html', rows=game._board.rows, columns=game._board.columns, board=game.board)
-        return render_template('board.html', rows=8, columns=8, board=fake_board, images=piece_images)
+        return render_template('board.html', rows=8, columns=8, board=fake_board, images=piece_images, destinations=destinations)
         # players = []
 
         # for player in db_game.players:

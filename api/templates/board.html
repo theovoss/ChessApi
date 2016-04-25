@@ -8,13 +8,23 @@
 <body>
 {% for row in range(rows) %}
     <div>
-        {% for col in range(columns) %}
-            {% if board[(row, col)] %}
-                <input type="image" src='{{images[board[(row, col)]]}}' width="80" height="80" value="{{board[(row, col)]}}" />
-            {% else %}
-                <input type="image" src='http://memegen.link/latest.jpg' width="80" height="80" value="" />
-            {% endif %}
-        {% endfor %}
+        <form class="form-horizontal">
+            {% for col in range(columns) %}
+                {% if board[(row, col)] %}
+                    {% if (row, col) in destinations %}
+                        <input type="image" src='{{images[board[(row, col)]]}}' name='{{row}}.{{col}}' width="80" height="80" value="{{board[(row, col)]}}" style='outline: #00FF00 dotted thick;'/>
+                    {% else %}
+                        <input type="image" src='{{images[board[(row, col)]]}}' name='{{row}}.{{col}}' width="80" height="80" value="{{board[(row, col)]}}"/>
+                    {% endif %}
+                {% else %}
+                    {% if (row, col) in destinations %}
+                        <input type="image" src='http://memegen.link/latest.jpg' name='{{row}}.{{col}}' width="80" height="80" value="empty" style='outline: #00FF00 dotted thick;'/>
+                    {% else %}
+                        <input type="image" src='http://memegen.link/latest.jpg' name='{{row}}.{{col}}' width="80" height="80" value="empty"/>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </form>
     </div>
 {% endfor %}
 </body>
