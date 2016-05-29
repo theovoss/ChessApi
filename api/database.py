@@ -66,6 +66,7 @@ class Model:
 
 class Game(Model, db.Model):
 
+    # DB info:
     __tablename__ = 'games'
 
     board = db.Column(JSONB)
@@ -75,6 +76,34 @@ class Game(Model, db.Model):
 
     player_1 = db.relationship("User", foreign_keys="Game.player_1_id")
     player_2 = db.relationship("User", foreign_keys="Game.player_2_id")
+
+    # Other logic
+    piece_char = {
+        'pawn': 'p',
+        'knight': 'n',
+        'rook': 'r',
+        'bishop': 'b',
+        'king': 'k',
+        'queen': 'q'
+    }
+
+    @property
+    def piece_locations(self):
+        locations = {}
+        for player in self.board['board']:
+            for piece in self.board['board'][player]:
+                for location in self.board['board'][player][piece]:
+                    locations["{}.{}".format(*location)] = self.get_player_piece_character(player, piece)
+        return locations
+
+    # black is lowercase, white is uppercase
+    # find color at players.player.color
+    def get_player_piece_character(self, player, piece):
+        color = self.board['players'][player]['color']
+        char = self.piece_char[piece]
+        if color == "white":
+            return char.upper()
+        return char
 
     @property
     def current_player(self):
