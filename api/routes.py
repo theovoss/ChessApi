@@ -25,10 +25,15 @@ create_user_args = {
     'name': fields.Str()
 }
 
-def get_color(code):
-    if code.isupper():
-        return "white"
-    return "black"
+
+def get_requested_index(request):
+    index = None
+    if request.args:
+        input_id = min([k for k in request.args])
+        row, col = input_id.split('.')
+        index = (int(row), int(col))
+    return index
+
 
 # lowercase = black, uppercase = white
 piece_images = {
@@ -45,17 +50,6 @@ piece_images = {
     'b': 'https://upload.wikimedia.org/wikipedia/commons/8/81/Chess_bdt60.png',
     'B': 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Chess_blt60.png'
 }
-
-
-def load_url_map(app):
-    url_map = {}
-    for rule in app.url_map.iter_rules():
-        url_format = rule.rule.replace("<", "%7B").replace(">", "%7D").replace("path:", "")
-        args = [arg.replace("{", "%7B").replace("}", "%7D") for arg in rule.arguments]
-        url_map[rule.endpoint] = dict(url=url_format,
-                                      arguments=args)
-
-    return url_map
 
 
 @blueprint.route('', methods=['GET'])
@@ -79,27 +73,33 @@ def selected(game_token, row, column):
     game = Chess(existing_board=board)
     index = (int(row), int(column))
     destinations = game.destinations(index)
+    requested_index = get_requested_index(request)
+    if requested_index:
+        if requested_index in destinations:
+            # move piece to requested index and re-direct to board
+            game.move(index, requested_index)
+            url = "chess/game/{}/".format(game_token)
+            return redirect(url)
+        elif game.destinations(requested_index):
+            # redirect to a different selected route
+            url = "chess/game/{}/selected/{}/{}/".format(game_token, requested_index[0], requested_index[1])
+            return redirect(url)
+        else:
+            # redirect to board
+            url = "chess/game/{}/".format(game_token)
+            return redirect(url)
     return render_template('selected.html', rows=8, columns=8, board=db_game.piece_locations, images=piece_images, destinations=destinations)
 
 
 @blueprint.route('game/<game_token>/', methods=['GET'])
 def board(game_token):
     db_game = Game.query.all()[0]  # TODO: search by game token
-    c = Chess(existing_board=db_game.board)
-    destinations = []
-    if request.args:
-        game = Chess(existing_board=db_game.board)
-        input_id = min([k for k in request.args])
-        input_piece = request.args[input_id]
-        row, col = input_id.split('.')
-        index = (int(row), int(col))
-        destinations = game.destinations(index)
-        if destinations:
-            url = "chess/game/{}/selected/{}/{}/".format(game_token, row, col)
-            import pdb
-            pdb.set_trace()
-            return redirect(url)  # TODO: figure out how to call url_for...
-            # return redirect(url_for('selected', game_token=game_token, row=row, column=col))
+    game = Chess(existing_board=db_game.board)
+    index = get_requested_index(request)
+    if index and game.destinations(index):
+        url = "chess/game/{}/selected/{}/{}/".format(game_token, index[0], index[1])
+        return redirect(url)  # TODO: figure out how to call url_for...
+        # return redirect(url_for('selected', game_token=game_token, row=row, column=col))
     if db_game:
         return render_template('board.html', rows=8, columns=8, board=db_game.piece_locations, images=piece_images)
     else:
