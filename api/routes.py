@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, abort, url_for, current_app, render_template, request
+from flask import Blueprint, jsonify, abort, url_for, current_app, render_template, request, redirect
 from flask.ext.login import login_required, current_user
 
 from webargs import fields
@@ -69,22 +69,22 @@ def root():
     return response
 
 
-@blueprint.route('game/<game_token>/selected/<row>/<column>/', methods=['GET'])
+@blueprint.route('game/<game_token>/selected/<int:row>/<int:column>/', methods=['GET'])
 def selected(game_token, row, column):
-    db_game = Game.query.get(game_token)
+    # db_game = Game.query.get(game_token)
+    db_game = Game.query.all()[0]  # TODO: search by game token
     if not db_game:
         abort(400, "That game doesn't exits.")
     board = db_game.board
     game = Chess(existing_board=board)
     index = (int(row), int(column))
     destinations = game.destinations(index)
-    return render_template('selected.html', rows=8, columns=8, board=board, images=piece_images, destinations=destinations)
-
+    return render_template('selected.html', rows=8, columns=8, board=db_game.piece_locations, images=piece_images, destinations=destinations)
 
 
 @blueprint.route('game/<game_token>/', methods=['GET'])
 def board(game_token):
-    db_game = Game.query.all()[0]
+    db_game = Game.query.all()[0]  # TODO: search by game token
     c = Chess(existing_board=db_game.board)
     destinations = []
     if request.args:
@@ -95,16 +95,12 @@ def board(game_token):
         index = (int(row), int(col))
         destinations = game.destinations(index)
         if destinations:
-            return redirect(url_for('selected'))
-
-        # print("Pressed row: {} col: {}".format(row, col))
-        # print("Piece is a: {}".format(get_color(input_piece) + " " + input_piece))
-    # current state of the chess board.
-    # db_game = Game.query.get(game_token)
+            url = "chess/game/{}/selected/{}/{}/".format(game_token, row, col)
+            import pdb
+            pdb.set_trace()
+            return redirect(url)  # TODO: figure out how to call url_for...
+            # return redirect(url_for('selected', game_token=game_token, row=row, column=col))
     if db_game:
-        # game = Chess(existing_board=db_game.board)
-        # data = game.generate_fen()
-        # render_template('board.html', rows=game._board.rows, columns=game._board.columns, board=game.board)
         return render_template('board.html', rows=8, columns=8, board=db_game.piece_locations, images=piece_images)
     else:
         abort(400, "That game doesn't exits.")
