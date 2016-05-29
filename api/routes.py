@@ -77,9 +77,11 @@ def selected(game_token, row, column):
     if requested_index:
         if requested_index in destinations:
             # move piece to requested index and re-direct to board
-            game.move(index, requested_index)
-            url = "chess/game/{}/".format(game_token)
-            return redirect(url)
+            if game.move(index, requested_index):
+                db_game.board = game.export()
+                db_game.save()
+                url = "chess/game/{}/".format(game_token)
+                return redirect(url)
         elif game.destinations(requested_index):
             # redirect to a different selected route
             url = "chess/game/{}/selected/{}/{}/".format(game_token, requested_index[0], requested_index[1])
