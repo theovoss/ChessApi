@@ -12,7 +12,7 @@
             {% for col in range(columns) %}
                 {% if board['{}.{}'.format(row, col)] %}
                     {% if (row, col) in destinations %}
-                        <input type="image" src='{{images[board[(row, col)]]}}' name='{{row}}.{{col}}' width="80" height="80" value="{{board[(row, col)]}}" style='outline: #00FF00 dotted thick;'/>
+                        <input type="image" src='{{images[board["{}.{}".format(row, col)]]}}' name='{{row}}.{{col}}' width="80" height="80" value="{{board[(row, col)]}}" style='outline: #00FF00 dotted thick;'/>
                     {% else %}
                         <input type="image" src='{{images[board["{}.{}".format(row, col)]]}}' name='{{row}}.{{col}}' width="80" height="80" value='{{board["{}.{}".format(row, col)]}}'/>
                     {% endif %}
