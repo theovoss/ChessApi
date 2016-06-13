@@ -30,7 +30,10 @@ def get_requested_index(request):
     index = None
     if request.args:
         input_id = min([k for k in request.args])
-        row, col = input_id.split('.')
+        if input_id.count('.') > 1:
+            row, col, _ = input_id.split('.')
+        else:
+            row, col = input_id.split('.')
         index = (int(row), int(col))
     return index
 
@@ -82,6 +85,8 @@ def selected(game_token, row, column):
                 db_game.save()
                 url = "chess/game/{}/".format(game_token)
                 return redirect(url)
+            else:
+                print("NOT A VALID MOVE!!!")
         elif game.destinations(requested_index):
             # redirect to a different selected route
             url = "chess/game/{}/selected/{}/{}/".format(game_token, requested_index[0], requested_index[1])
