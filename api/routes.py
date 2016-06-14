@@ -7,6 +7,8 @@ from webargs.flaskparser import FlaskParser
 from chess.chess import Chess
 from .database import Game, User
 
+from tests.factories import UserFactory  # TODO: remove
+
 blueprint = Blueprint("chess", __name__, url_prefix='/chess/')
 parser = FlaskParser(('query', 'json'))
 
@@ -57,19 +59,16 @@ piece_images = {
 
 @blueprint.route('', methods=['GET'])
 def root():
-    routes = load_url_map(current_app)
-    print(routes)
-    response = jsonify(routes)
-    import pdb
-    pdb.set_trace()
-    response.status_code = 200
-    return response
+    games = Game.query.all()
+    # import pdb
+    # pdb.set_trace()
+    return render_template('games.html', images=piece_images, games=games)
 
 
 @blueprint.route('game/<game_token>/selected/<int:row>/<int:column>/', methods=['GET'])
 def selected(game_token, row, column):
     # db_game = Game.query.get(game_token)
-    db_game = Game.query.all()[0]  # TODO: search by game token
+    db_game = Game.query.get(game_token)
     if not db_game:
         abort(400, "That game doesn't exits.")
     board = db_game.board
@@ -100,7 +99,7 @@ def selected(game_token, row, column):
 
 @blueprint.route('game/<game_token>/', methods=['GET'])
 def board(game_token):
-    db_game = Game.query.all()[0]  # TODO: search by game token
+    db_game = Game.query.get(game_token)
     game = Chess(existing_board=db_game.board)
     index = get_requested_index(request)
     if index and game.destinations(index):
@@ -163,23 +162,16 @@ def create_user(email, password, name):
     return response
 
 
-@blueprint.route('create/', methods=['POST'])
-@parser.use_kwargs(game_args)
-@login_required
+# @parser.use_kwargs(game_args)
+# @login_required
+@blueprint.route('create/', methods=['GET'])
 def create_game(color="white"):
     game_json = Chess().export()
-
-    game = Game.create(board=game_json, player_1=current_user)
-    token = game.id
-    links = {}
-    links['invite'] = url_for('chess.join_game', game_token=game.id)
-    links['board'] = url_for('chess.board', game_token=game.id)
-    links['move'] = url_for('chess.move', game_token=game.id)
-    data = dict(token=token, links=links)
-
-    response = jsonify(data)
-    response.status_code = 200
-    return response
+    player_1 = current_user
+    player_1 = UserFactory()  # TODO: obviously delete this once it is required that they are signed in.
+    game = Game.create(board=game_json, player_1=player_1, player_2=UserFactory())
+    url = "chess/game/{}/".format(game.id)
+    return redirect(url)
 
 
 @blueprint.route('join/<game_token>/', methods=['POST'])
