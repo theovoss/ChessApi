@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Chess</title>
+    <link rel="shortcut icon" type="image/x-icon" href="{{images['k']}}" />
+</head>
+<body>
+{% for game in games %}
+    <a href={{url}}>{{game.player_1.name game.player_2.name}}</a>
+{% endfor %}
+</body>
+</html>
