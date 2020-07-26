@@ -1,28 +1,28 @@
 # Flask Libraries
-Werkzeug ~= 0.10.4
-Flask ~= 0.10.1
-webargs ~= 0.16
-Flask-SQLAlchemy ~= 2.0
+Werkzeug
+Flask
+webargs ~= 5.5.1
+Flask-SQLAlchemy
 Flask-Login
 Flask-Principal
 
 ## Database
-SQLAlchemy ~= 1.0.4
-sqlalchemy_utils ~= 0.30.2
-psycopg2 ~= 2.6
-Flask-Migrate ~= 1.4
+SQLAlchemy
+sqlalchemy_utils
+psycopg2
+Flask-Migrate
 
 # Utilities
-Flask-Script ~= 2.0.5
+Flask-Script
 
 # Chess Library
 git+git://github.com/theovoss/Chess.git
 
 # time
-arrow ~= 0.5.4
+arrow
 
 # deployment
-gunicorn ~= 19.3.0
+gunicorn
 
 # Testing
 factory-boy
